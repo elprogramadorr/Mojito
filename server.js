@@ -11,7 +11,7 @@ app.use(cors()); // habilitar CORS
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'mateito04',
+  password: 'pass',
   database: 'cocteles'
 });
 
@@ -24,7 +24,6 @@ db.connect((err) => {
 
 app.post('/cocteles', (req, res) => {
   const name = req.body.name;
-  //check if name already exits in the table
   const sql2 = 'SELECT * FROM cocktails WHERE nombre = ?';
     db.query(sql2, [name], (err, result) => {
         if (err) {
@@ -32,7 +31,7 @@ app.post('/cocteles', (req, res) => {
             return res.status(500).json({ message: 'Error al agregar el coctel' });
         }
         if (result.length > 0) {
-            return res.status(400).json({ message: 'El coctel ya existe' });
+            return res.json({ message: 'El coctel ya existe' });
         }
     });
   const sql = 'INSERT INTO cocktails (nombre) VALUES (?)';
