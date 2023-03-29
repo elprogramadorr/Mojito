@@ -1,38 +1,42 @@
 import React, { useState } from 'react';
-import axios from './http';
+import './App.css';
 
 function App() {
-  const [nombre, setNombre] = useState('');
-  const [mensaje, setMensaje] = useState('');
+  const [cocktailName, setCocktailName] = useState('');
+  const [message, setMessage] = useState('');
 
-  const handleNombreChange = (event) => {
-    setNombre(event.target.value);
-  };
-
-  const handleSubmit = (event) => {
-    //change entry to database
-
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    axios.post('/cocteles', { nombre })
-      .then((response) => {
-        setMensaje(response.data);
-      })
-      .catch((error) => {
-        setNombre('');
-        console.log(error);
+    try {
+      const response = await fetch('http://localhost:3001/cocteles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: cocktailName })
       });
-  };
+      if (response.ok) {
+        const data = await response.json();
+        setMessage(data.message);
+      } else {
+        setMessage('Error al enviar el coctel');
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage('Error al enviar el coctel');
+    }
+  }
 
   return (
-    <div>
+    <div className="App">
       <form onSubmit={handleSubmit}>
         <label>
           Nombre del coctel:
-          <input type="text" value={nombre} onChange={handleNombreChange} />
+          <input type="text" value={cocktailName} onChange={(e) => setCocktailName(e.target.value)} />
         </label>
         <button type="submit">Enviar</button>
       </form>
-      {mensaje && <p>{mensaje}</p>}
+      {message && <p>{message}</p>}
     </div>
   );
 }

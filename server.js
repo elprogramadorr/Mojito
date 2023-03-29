@@ -1,10 +1,12 @@
 const express = require('express');
-// const mysql = require('mysql');
+const cors = require('cors');
 const mysql = require('mysql2');
-const bodyParser = require('body-parser');
 
 const app = express();
-const port = 4000;
+const port = 3001;
+
+app.use(express.json());
+app.use(cors()); // habilitar CORS
 
 const db = mysql.createConnection({
   host: 'localhost',
@@ -14,31 +16,36 @@ const db = mysql.createConnection({
 });
 
 db.connect((err) => {
-  if (err) throw err;
+  if (err) {
+    throw err;
+  }
   console.log('Conectado a la base de datos MySQL');
 });
 
-app.use(bodyParser.urlencoded({ extended: false }));
-
 app.post('/cocteles', (req, res) => {
-  const nombre = req.body.nombre;
-
-  const sql = `SELECT * FROM cocktails WHERE nombre = '${nombre}'`;
-
-  db.query(sql, (err, result) => {
-    if (err) throw err;
-    if (result.length > 0) {
-      res.send(`${nombre} ya está incluido en la lista de cocteles`);
-    } else {
-      const sql = `INSERT INTO cocktails (nombre) VALUES ('${nombre}')`;
-      db.query(sql, (err, result) => {
-        if (err) throw err;
-        res.send(`${nombre} ha sido incluido en la lista de cocteles`);
-      });
+  const name = req.body.name;
+  //check if name already exits in the table
+  const sql2 = 'SELECT * FROM cocktails WHERE nombre = ?';
+    db.query(sql2, [name], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Error al agregar el coctel' });
+        }
+        if (result.length > 0) {
+            return res.status(400).json({ message: 'El coctel ya existe' });
+        }
+    });
+  const sql = 'INSERT INTO cocktails (nombre) VALUES (?)';
+  db.query(sql, [name], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: 'Error al agregar el coctel' });
     }
+    console.log(`Se ha agregado el coctel ${name}`);
+    return res.json({ message: 'Coctel agregado con éxito' });
   });
 });
 
 app.listen(port, () => {
-  console.log(`Servidor web escuchando en http://localhost:${port}`);
+  console.log(`Servidor Express escuchando en el puerto ${port}`);
 });
